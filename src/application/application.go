@@ -11,8 +11,6 @@ var (
 
 func StartApp () {
 	routesMap()
-
-	fmt.Println("Siap laksanakan")
-
+	fmt.Println("Token Access Service started...")
 	router.Run(":8080")
 }

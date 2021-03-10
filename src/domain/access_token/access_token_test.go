@@ -1,32 +1,27 @@
 package access_token
 
 import (
+	"github.com/stretchr/testify/assert"
+
 	"testing"
 	"time"
 )
 
-func TestGetNewAccessToken(t *testing.T) {
-	at := GetNewAccessToken()
-	if at.IsExpired() {
-		t.Error("brand new access token should not be expired")
-	}
-
-	if at.AccessToken != "" {
-		t.Error("new access token should not have defined access token id")
-	}
-
-	if at.UserId != 0 {
-		t.Error("new access token should not have an associated user id")
-	}
+func TestAccessTokenConstans(t *testing.T) {
+	assert.EqualValues(t, 24, ExpirationTime, "Expiration time should be 24")
 }
 
-func TestAccessToken_IsExpired(t *testing.T) {
+func TestGetNewAccessToken(t *testing.T) {
+	at := GetNewAccessToken()
+	assert.False(t, at.isExpired(), "branch access token should not be expired")
+	assert.EqualValues(t, "", at.AccessToken, "new access token not have to defined")
+	assert.True(t, at.UserId == 0, "new access token should have an associated user id")
+}
+
+func TestAccessTokenIsExpired(t *testing.T) {
 	at := AccessToken{}
-	if !at.IsExpired(){
-		t.Error("default access token should be expired by default")
-	}
+	assert.True(t, at.isExpired(), "empty access token by default")
+
 	at.Expires = time.Now().UTC().Add(3 * time.Hour).Unix()
-	if at.IsExpired() {
-		t.Error("error bro")
-	}
+	assert.False(t, at.isExpired(),"access token expiring 3 hours" )
 }

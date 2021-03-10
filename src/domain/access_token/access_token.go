@@ -1,9 +1,12 @@
 package access_token
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 const (
-	expirationTime = 24
+	ExpirationTime = 24
 )
 
 type AccessToken struct {
@@ -13,16 +16,16 @@ type AccessToken struct {
 	Expires     int64  `json:"expires"`
 }
 
-// web frontend - Client-Id: 123
-// android app - Client-Id: 234
-// ios app - client-ID: 345
-
 func GetNewAccessToken() AccessToken {
 	return AccessToken{
-		Expires: time.Now().UTC().Add(expirationTime * time.Hour).Unix(),
+		Expires: time.Now().UTC().Add(ExpirationTime * time.Hour).Unix(),
 	}
 }
 
-func (at AccessToken) IsExpired() bool {
-	return time.Unix(at.Expires,0).Before(time.Now().UTC())
+func (at AccessToken) isExpired() bool {
+	now := time.Now().UTC()
+	expirationTime := time.Unix(at.Expires, 0)
+	fmt.Println("ExpirationTime: ", expirationTime)
+
+	return expirationTime.Before(now)
 }

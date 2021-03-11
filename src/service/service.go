@@ -3,15 +3,16 @@ package service
 import (
 	"amiera/src/domain/access_token"
 	"amiera/src/utils/utils_errors"
-	"strings"
 )
 
 type Repository interface {
-	GetById(string) (*access_token.AccessToken, *utils_errors.RestErr)
+	GetById(int64) (*access_token.AccessToken, *utils_errors.RestErr)
+	GetAT() ([]access_token.AccessToken, *utils_errors.RestErr)
 }
 
 type Service interface {
-	GetById(string) (*access_token.AccessToken, *utils_errors.RestErr)
+	GetById(int64) (*access_token.AccessToken, *utils_errors.RestErr)
+	GetAT() ([]access_token.AccessToken, *utils_errors.RestErr)
 }
 
 type service struct {
@@ -24,13 +25,20 @@ func NewService(repo Repository) Service {
 	}
 }
 
-func (s *service) GetById(atId string) (*access_token.AccessToken, *utils_errors.RestErr)  {
-	accessTokenId := strings.TrimSpace(atId)
-	if len(accessTokenId) == 0 {
+func (s *service) GetById(atId int64) (*access_token.AccessToken, *utils_errors.RestErr)  {
+	if atId < 0 {
 		return nil, utils_errors.CustomBadRequestError("invalid access token id")
 	}
 
 	accessToken, err := s.repository.GetById(atId)
+	if err != nil {
+		return nil, err
+	}
+	return accessToken, nil
+}
+
+func (s *service) GetAT() ([]access_token.AccessToken, *utils_errors.RestErr)  {
+	accessToken, err := s.repository.GetAT()
 	if err != nil {
 		return nil, err
 	}

@@ -10,10 +10,10 @@ const (
 )
 
 type AccessToken struct {
-	AccessToken string `json:"access_token"`
-	UserId      int64  `json:"user_id"`
-	ClientId    int64  `json:"client_id"`
-	Expires     int64  `json:"expires"`
+	AccessToken string `json:"access_token" bson:"access_token,omitempty"`
+	UserId      int64  `json:"user_id" bson:"user_id,omitempty"`
+	ClientId    int64  `json:"client_id" bson:"client_id,omitempty"`
+	Expires     int64  `json:"expires" bson:"expires,omitempty"`
 }
 
 func GetNewAccessToken() AccessToken {

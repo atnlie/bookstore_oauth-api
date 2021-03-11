@@ -13,4 +13,5 @@ func routesMap () {
 	atHandler := controller_http.NewHandler(atService)
 	router.GET("/oauth/access_token", atHandler.GetAT)
 	router.GET("/oauth/access_token/:user_id", atHandler.GetById)
+	router.GET("/oauth/token/:filter", atHandler.GetOptionById)
 }

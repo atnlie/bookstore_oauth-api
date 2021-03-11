@@ -5,6 +5,7 @@ import (
 	"amiera/src/utils/utils_errors"
 	"context"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -114,8 +115,68 @@ func GetAccessTokenById(acId int64) (*access_token.AccessToken, *utils_errors.Re
 		fmt.Println("Error ", err)
 	}
 
-    if accTokenUnique.UserId <= 0 {
+	if accTokenUnique.UserId <= 0 {
 		return nil, utils_errors.CustomNotFoundError(fmt.Sprintf("Access Token Id: %d not found.", acId))
 	}
 	return &accTokenUnique, nil
+}
+
+func GetOptionAccessTokenById(filter int64) ([]access_token.AccessToken, *utils_errors.RestErr) {
+	uri := "mongodb://localhost:27017/?connect=direct"
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
+	if err != nil {
+		return nil, utils_errors.CustomInternalServerError(err.Error())
+	}
+
+	defer func() {
+		if err = client.Disconnect(ctx); err != nil {
+			panic(err)
+		}
+	}()
+
+	accTokenColl := client.Database("db_oauth").Collection("access_token")
+
+	//cursor, err := accTokenColl.Find(ctx, access_token.AccessToken{UserId: userId})
+	//if err != nil {
+	//	return nil, utils_errors.CustomInternalServerError(err.Error())
+	//}
+	//
+	//defer cursor.Close(ctx)
+
+	opts := options.Find()
+	opts.SetSort(access_token.AccessToken{ClientId: -1})
+	sortCursor, err := accTokenColl.Find(ctx,
+		bson.D{
+			{
+				"client_id", bson.D{
+				{"$gte", filter}},
+			}}, opts)
+
+	//how to make multiple query
+	/*
+		sortCursor, err := accTokenColl.Find(ctx,
+				bson.D{
+					{
+						"client_id", bson.D{
+						{"$gte", filter}},
+					}, {
+						"user_id", bson.D{
+							{"$eq", filter},
+						},
+					},
+				}, opts)
+
+	*/
+
+	defer sortCursor.Close(ctx)
+
+	var result []access_token.AccessToken
+	if err = sortCursor.All(ctx, &result); err != nil {
+		fmt.Println("Err ", err)
+	}
+
+	return result, nil
 }

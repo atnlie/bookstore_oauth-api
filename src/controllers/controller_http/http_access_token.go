@@ -10,6 +10,7 @@ import (
 type AccessTokenHandler interface {
 	GetById(*gin.Context)
 	GetAT(*gin.Context)
+	GetOptionById(*gin.Context)
 }
 
 type accessTokenHandler struct {
@@ -23,8 +24,8 @@ func NewHandler(atService service.Service) AccessTokenHandler {
 }
 
 func (handler *accessTokenHandler) GetById(c *gin.Context) {
-	acId, _ := strconv.ParseInt(c.Param("user_id"), 10, 0)
-	accessToken, err := handler.atService.GetById(acId)
+	userId, _ := strconv.ParseInt(c.Param("user_id"), 10, 0)
+	accessToken, err := handler.atService.GetById(userId)
 	if err != nil {
 		c.JSON(err.Status, err)
 		return
@@ -39,4 +40,14 @@ func (handler *accessTokenHandler) GetAT(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, accessToken)
+}
+
+func (handler *accessTokenHandler) GetOptionById(c *gin.Context)  {
+	userId, _ := strconv.ParseInt(c.Param("filter"), 10,0)
+	accToken, err := handler.atService.GetOptionById(userId)
+	if err != nil {
+		c.JSON(err.Status, err)
+		return
+	}
+	c.JSON(http.StatusOK, accToken)
 }

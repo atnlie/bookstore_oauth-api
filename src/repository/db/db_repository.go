@@ -9,7 +9,9 @@ import (
 type DbRepository interface {
 	GetAT() ([]access_token.AccessToken, *utils_errors.RestErr)
 	GetById(int64) (*access_token.AccessToken, *utils_errors.RestErr)
+	GetOptionById(int64) ([]access_token.AccessToken, *utils_errors.RestErr)
 }
+
 
 type dbRepository struct {
 }
@@ -21,7 +23,7 @@ func NewRepository() DbRepository {
 func (r *dbRepository) GetAT() ([]access_token.AccessToken, *utils_errors.RestErr) {
 	at, err := mongodb.GetAllAccessToken()
 	if err != nil {
-		return nil, utils_errors.CustomInternalServerError("Db connection not implemented yet")
+		return nil, utils_errors.CustomInternalServerError("Data not found")
 	}
 
 	return at, nil
@@ -29,6 +31,14 @@ func (r *dbRepository) GetAT() ([]access_token.AccessToken, *utils_errors.RestEr
 
 func (r *dbRepository) GetById(acId int64) (*access_token.AccessToken, *utils_errors.RestErr) {
 	at, err := mongodb.GetAccessTokenById(acId)
+	if err != nil {
+		return nil, err
+	}
+	return at, nil
+}
+
+func (r *dbRepository) GetOptionById(filter int64) ([]access_token.AccessToken, *utils_errors.RestErr)  {
+	at, err := mongodb.GetOptionAccessTokenById(filter)
 	if err != nil {
 		return nil, err
 	}

@@ -1,7 +1,11 @@
 package controller_http
 
 import (
+	"amiera/src/domain/access_token"
 	"amiera/src/service"
+	"amiera/src/utils/utils_errors"
+	"amiera/src/utils/utils_responses"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -11,6 +15,8 @@ type AccessTokenHandler interface {
 	GetById(*gin.Context)
 	GetAT(*gin.Context)
 	GetOptionById(*gin.Context)
+	CreateToken(*gin.Context)
+	UpdateExpiration(*gin.Context)
 }
 
 type accessTokenHandler struct {
@@ -42,12 +48,51 @@ func (handler *accessTokenHandler) GetAT(c *gin.Context) {
 	c.JSON(http.StatusOK, accessToken)
 }
 
-func (handler *accessTokenHandler) GetOptionById(c *gin.Context)  {
-	userId, _ := strconv.ParseInt(c.Param("filter"), 10,0)
+func (handler *accessTokenHandler) GetOptionById(c *gin.Context) {
+	userId, _ := strconv.ParseInt(c.Param("filter"), 10, 0)
 	accToken, err := handler.atService.GetOptionById(userId)
 	if err != nil {
 		c.JSON(err.Status, err)
 		return
 	}
 	c.JSON(http.StatusOK, accToken)
+}
+
+func (handler *accessTokenHandler) CreateToken(c *gin.Context) {
+	var accToken access_token.AccessToken
+
+	if err := c.ShouldBind(&accToken); err != nil {
+		errRest := utils_errors.CustomBadRequestError("invalid json body")
+		c.JSON(errRest.Status, errRest)
+		return
+	}
+
+	// read body
+	fmt.Println("accToken", accToken)
+	err := handler.atService.CreateToken(accToken)
+	if err != nil {
+		c.JSON(err.Status, err)
+		return
+	}
+	c.JSON(http.StatusOK, utils_responses.CustomSuccessResponse("token is created"))
+}
+
+func (handler *accessTokenHandler) UpdateExpiration (c *gin.Context) {
+	var accToken access_token.AccessToken
+
+	if err := c.ShouldBind(&accToken); err != nil {
+		errRest := utils_errors.CustomBadRequestError("invalid json body")
+		c.JSON(errRest.Status, errRest)
+		return
+	}
+
+	fmt.Println("accToken", accToken)
+	isPartial := c.Request.Method == http.MethodPatch
+	err := handler.atService.UpdateExpiration(accToken, isPartial)
+	if err != nil {
+		c.JSON(err.Status, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, utils_responses.CustomSuccessResponse("OK"))
 }

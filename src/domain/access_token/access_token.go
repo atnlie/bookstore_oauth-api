@@ -1,6 +1,7 @@
 package access_token
 
 import (
+	"amiera/src/utils/utils_errors"
 	"fmt"
 	"time"
 )
@@ -28,4 +29,11 @@ func (at AccessToken) isExpired() bool {
 	fmt.Println("ExpirationTime: ", expirationTime)
 
 	return expirationTime.Before(now)
+}
+
+func (at *AccessToken) Validation() *utils_errors.RestErr {
+	if at.UserId <= 0 {
+		return utils_errors.CustomBadRequestError("Invalid userId")
+	}
+	return nil
 }

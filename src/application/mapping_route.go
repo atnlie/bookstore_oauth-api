@@ -14,4 +14,8 @@ func routesMap () {
 	router.GET("/oauth/access_token", atHandler.GetAT)
 	router.GET("/oauth/access_token/:user_id", atHandler.GetById)
 	router.GET("/oauth/token/:filter", atHandler.GetOptionById)
+
+	router.POST("/oauth/access_token", atHandler.CreateToken)
+	router.PATCH("/oauth/access_token", atHandler.UpdateExpiration)
+
 }

@@ -12,6 +12,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+var (
+	uri             = "mongodb://localhost:27017/?connect=direct"
+	dbSchema        = "db_oauth"
+	AccessTokenColl = "access_token"
+)
+
 /*
 func ConnectToAccessToken() (*mongo.Client, context.Context, *utils_errors.RestErr) {
 	uri := "mongodb://localhost:27017/?connect=direct"
@@ -37,8 +43,6 @@ func ConnectToAccessToken() (*mongo.Client, context.Context, *utils_errors.RestE
 */
 
 func GetAllAccessToken() ([]access_token.AccessToken, *utils_errors.RestErr) {
-
-	uri := "mongodb://localhost:27017/?connect=direct"
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -92,7 +96,6 @@ func GetAllAccessToken() ([]access_token.AccessToken, *utils_errors.RestErr) {
 }
 
 func GetAccessTokenById(acId int64) (*access_token.AccessToken, *utils_errors.RestErr) {
-	uri := "mongodb://localhost:27017/?connect=direct"
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -122,7 +125,6 @@ func GetAccessTokenById(acId int64) (*access_token.AccessToken, *utils_errors.Re
 }
 
 func GetOptionAccessTokenById(filter int64) ([]access_token.AccessToken, *utils_errors.RestErr) {
-	uri := "mongodb://localhost:27017/?connect=direct"
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -179,4 +181,102 @@ func GetOptionAccessTokenById(filter int64) ([]access_token.AccessToken, *utils_
 	}
 
 	return result, nil
+}
+
+func SetConnection() (context.Context, *mongo.Client, *utils_errors.RestErr) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
+	if err != nil {
+		return nil, nil, utils_errors.CustomInternalServerError(err.Error())
+	}
+
+	defer func() {
+		if err = client.Disconnect(ctx); err != nil {
+			panic(err)
+		}
+	}()
+
+	return ctx, client, nil
+}
+
+func CreateToken(token access_token.AccessToken) *utils_errors.RestErr {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
+	if err != nil {
+		return utils_errors.CustomInternalServerError(err.Error())
+	}
+
+	defer func() {
+		if err = client.Disconnect(ctx); err != nil {
+			panic(err)
+		}
+	}()
+
+	acCollection := client.Database(dbSchema).Collection(AccessTokenColl)
+	acResult, errCon := acCollection.InsertOne(ctx, access_token.AccessToken{AccessToken: token.AccessToken,
+		UserId: token.UserId, ClientId: token.ClientId, Expires: token.Expires})
+
+	if errCon != nil {
+		return utils_errors.CustomInternalServerError("failed to insert data")
+	}
+
+	fmt.Printf("insert data success %v ", acResult)
+
+	return nil
+}
+
+func toDoc(v interface{}) (doc *bson.D, err error) {
+	data, err := bson.Marshal(v)
+	if err != nil {
+		return
+	}
+
+	err = bson.Unmarshal(data, &doc)
+	return
+}
+
+func UpdateExpiration(token access_token.AccessToken) *utils_errors.RestErr {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
+	if err != nil {
+		return utils_errors.CustomInternalServerError(err.Error())
+	}
+
+	defer func() {
+		if err = client.Disconnect(ctx); err != nil {
+			panic(err)
+		}
+	}()
+
+	acCollection := client.Database(dbSchema).Collection(AccessTokenColl)
+	acResult, errCon := acCollection.UpdateOne(ctx, access_token.AccessToken{UserId: token.UserId},
+		bson.D{{
+			"$set", bson.D{
+				{
+					"expires", token.Expires,
+				},
+				{
+					"access_token", token.AccessToken,
+				},
+				{
+					"client_id", token.ClientId,
+				},
+			},
+		}},
+	)
+
+
+	if errCon != nil {
+		return utils_errors.CustomInternalServerError(err.Error())
+	}
+
+	fmt.Sprintf("update data successful %v", acResult.ModifiedCount)
+
+	return nil
 }

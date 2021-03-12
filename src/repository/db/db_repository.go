@@ -10,8 +10,9 @@ type DbRepository interface {
 	GetAT() ([]access_token.AccessToken, *utils_errors.RestErr)
 	GetById(int64) (*access_token.AccessToken, *utils_errors.RestErr)
 	GetOptionById(int64) ([]access_token.AccessToken, *utils_errors.RestErr)
+	CreateToken(access_token.AccessToken) *utils_errors.RestErr
+	UpdateExpiration(access_token.AccessToken) *utils_errors.RestErr
 }
-
 
 type dbRepository struct {
 }
@@ -43,4 +44,20 @@ func (r *dbRepository) GetOptionById(filter int64) ([]access_token.AccessToken, 
 		return nil, err
 	}
 	return at, nil
+}
+
+func (r *dbRepository) CreateToken(token access_token.AccessToken) *utils_errors.RestErr {
+	err := mongodb.CreateToken(token)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *dbRepository) UpdateExpiration(token access_token.AccessToken) *utils_errors.RestErr {
+	err := mongodb.UpdateExpiration(token)
+	if err != nil {
+		return err
+	}
+	return nil
 }

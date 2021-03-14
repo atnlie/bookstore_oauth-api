@@ -10,7 +10,10 @@ var (
 )
 
 func StartApp () {
+	/*
+	oauth use localhost:8081 and user-api use localhost:8080
+	 */
 	routesMap()
 	fmt.Println("Token Access Service started...")
-	router.Run(":8080")
+	router.Run(":8081")
 }

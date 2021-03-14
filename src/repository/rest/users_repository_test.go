@@ -52,7 +52,7 @@ func TestLoginUserInvalidErrorInterface(t *testing.T) {
 	assert.Nil(t, user, nil)
 	assert.NotNil(t, err)
 	assert.EqualValues(t, http.StatusInternalServerError, err.Status)
-	assert.EqualValues(t, "invalid rest-client response when trying login", err.Message)
+	assert.EqualValues(t, "invalid interface error when trying to login user", err.Message)
 }
 
 func TestLoginUserInvalidUserJsonResponse(t *testing.T) {

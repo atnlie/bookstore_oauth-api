@@ -62,7 +62,7 @@ func TestLoginUserInvalidUserJsonResponse(t *testing.T) {
 		HTTPMethod:   http.MethodPost,
 		ReqBody:      `{"email":"email@gmail.com","password":"the-password"}`,
 		RespHTTPCode: http.StatusOK,
-		RespBody:     `{"id":"1","first_name":"atnlie@gmail.com","last_name":"kurniyanto"}`,
+		RespBody:     `{"id":"1"","first_name":"anton","last_name":"kurniyanto","email": "budi@gmail.com"}`,
 	})
 
 	repository := usersRepository{}
@@ -82,15 +82,17 @@ func TestLoginUserNoError(t *testing.T) {
 		HTTPMethod:   http.MethodPost,
 		ReqBody:      `{"email":"email@gmail.com","password":"the-password"}`,
 		RespHTTPCode: http.StatusNotFound,
-		RespBody:     `{"message":"invalid login credentials","status":"404","error":"not_found"}`,
+		RespBody:     `{"id":1,"first_name":"anton","last_name":"kurniyanto","email": "budi@gmail.com"}`,
 	})
 
 	repository := usersRepository{}
 
 	user, err := repository.LoginUser("email@gmail.com", "the-password")
 
-	assert.Nil(t, user, nil)
-	assert.NotNil(t, err)
-	assert.EqualValues(t, http.StatusInternalServerError, err.Status)
-	assert.EqualValues(t, "invalid interface error when trying to login user", err.Message)
+	assert.Nil(t, err)
+	assert.NotNil(t, user)
+	assert.EqualValues(t,1, user.Id)
+	assert.EqualValues(t,"anton", user.FirstName)
+	assert.EqualValues(t,"kurniyanto", user.LastName)
+	assert.EqualValues(t,"budi@gmail.com", user.Email)
 }
